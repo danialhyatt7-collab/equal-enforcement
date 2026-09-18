@@ -33,10 +33,31 @@
       toggle.setAttribute("aria-expanded", open ? "true" : "false");
     });
     links.addEventListener("click", function (e) {
-      if (e.target.tagName === "A") {
-        links.classList.remove("open");
-        toggle.setAttribute("aria-expanded", "false");
+      var a = e.target.closest("a");
+      if (!a) return;
+      var id = a.getAttribute("href");
+      if (id && id.charAt(0) === "#") {
+        var target = document.querySelector(id);
+        if (target) {
+          e.preventDefault();
+          links.classList.remove("open");
+          toggle.setAttribute("aria-expanded", "false");
+          // let the collapsed layout settle before scrolling, so
+          // scroll-margin-top lands the heading just below the bar
+          window.requestAnimationFrame(function () {
+            window.requestAnimationFrame(function () {
+              target.scrollIntoView({
+                behavior: reduceMotion ? "auto" : "smooth",
+                block: "start"
+              });
+              if (history.replaceState) history.replaceState(null, "", id);
+            });
+          });
+          return;
+        }
       }
+      links.classList.remove("open");
+      toggle.setAttribute("aria-expanded", "false");
     });
     document.addEventListener("keydown", function (e) {
       if (e.key === "Escape" && links.classList.contains("open")) {
